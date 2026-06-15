@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 class ConversionError(Exception):
-    """Erreur affichable à l'utilisateur pendant une conversion."""
+    """User-facing conversion error."""
 
 
 FFMPEG_CANDIDATES = [
@@ -19,7 +19,7 @@ FFMPEG_CANDIDATES = [
 
 
 def find_ffmpeg() -> Path | None:
-    """Trouve ffmpeg même quand l'app macOS est lancée depuis Finder avec un PATH minimal."""
+    """Find ffmpeg even when a macOS app is launched from Finder with a minimal PATH."""
     for candidate in FFMPEG_CANDIDATES:
         if "/" not in candidate:
             resolved = shutil.which(candidate)
@@ -45,14 +45,14 @@ def convert_wav_to_mp3(source: str | Path, bitrate: str = "320k", output_dir: st
     source = Path(source).expanduser().resolve()
 
     if source.suffix.lower() != ".wav":
-        raise ConversionError(f"{source.name} n'est pas un fichier WAV.")
+        raise ConversionError(f"{source.name} is not a WAV file.")
 
     if not source.exists():
-        raise ConversionError(f"Fichier introuvable: {source}")
+        raise ConversionError(f"File not found: {source}")
 
     ffmpeg = find_ffmpeg()
     if ffmpeg is None:
-        raise ConversionError("ffmpeg n'est pas installé. Installe-le avec: brew install ffmpeg")
+        raise ConversionError("ffmpeg is not installed. Install it with: brew install ffmpeg")
 
     destination = output_path_for(source, output_dir)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -70,7 +70,7 @@ def convert_wav_to_mp3(source: str | Path, bitrate: str = "320k", output_dir: st
 
     result = subprocess.run(command, text=True, capture_output=True)
     if result.returncode != 0:
-        detail = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else "erreur inconnue"
-        raise ConversionError(f"Conversion impossible pour {source.name}: {detail}")
+        detail = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else "unknown error"
+        raise ConversionError(f"Could not convert {source.name}: {detail}")
 
     return destination

@@ -38,7 +38,7 @@ def test_cli_converts_multiple_wavs_to_selected_output_dir(tmp_path, capsys):
     assert exit_code == 0
     assert (output_dir / "a.mp3").exists()
     assert (output_dir / "b.mp3").exists()
-    assert "2 fichier(s) converti(s)" in captured.out
+    assert "2 file(s) converted" in captured.out
 
 
 def test_cli_accepts_directory_input_and_converts_wavs(tmp_path):
@@ -60,4 +60,4 @@ def test_cli_returns_error_for_missing_inputs(capsys):
 
     captured = capsys.readouterr()
     assert exit_code == 2
-    assert "Au moins un fichier ou dossier" in captured.err
+    assert "At least one WAV file or folder" in captured.err

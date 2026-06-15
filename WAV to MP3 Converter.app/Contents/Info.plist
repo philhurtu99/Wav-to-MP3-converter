@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
   <key>CFBundleName</key>
-  <string>Convertisseur WAV vers MP3</string>
+  <string>WAV to MP3 Converter</string>
   <key>CFBundleDisplayName</key>
-  <string>Convertisseur WAV vers MP3</string>
+  <string>WAV to MP3 Converter</string>
   <key>CFBundleIdentifier</key>
   <string>local.philippeclement.wav-to-mp3</string>
   <key>CFBundleVersion</key>

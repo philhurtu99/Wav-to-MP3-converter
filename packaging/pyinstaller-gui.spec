@@ -5,6 +5,7 @@ import sys
 
 block_cipher = None
 ROOT = Path(SPECPATH).parent
+APP_NAME = 'WAV to MP3 Converter'
 
 
 a = Analysis(
@@ -29,7 +30,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='Convertisseur WAV vers MP3',
+    name=APP_NAME,
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -49,16 +50,16 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='Convertisseur WAV vers MP3',
+    name=APP_NAME,
 )
 if sys.platform == 'darwin':
     app = BUNDLE(
         coll,
-        name='Convertisseur WAV vers MP3.app',
+        name=f'{APP_NAME}.app',
         icon=None,
         bundle_identifier='local.philippeclement.wav-to-mp3',
         info_plist={
-            'CFBundleDisplayName': 'Convertisseur WAV vers MP3',
+            'CFBundleDisplayName': APP_NAME,
             'CFBundleShortVersionString': '0.1.0',
             'CFBundleVersion': '0.1.0',
             'NSHighResolutionCapable': True,

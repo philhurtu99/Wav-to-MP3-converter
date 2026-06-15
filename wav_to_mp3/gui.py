@@ -22,8 +22,11 @@ from PySide6.QtWidgets import (
 from .converter import ConversionError, convert_wav_to_mp3
 
 
+APP_NAME = "WAV to MP3 Converter"
+
+
 def parse_dropped_paths(raw: str) -> list[Path]:
-    """Parse une chaîne de chemins style Tk: chemins simples ou entre accolades."""
+    """Parse Tk-style dropped paths, including paths wrapped in braces."""
     paths: list[str] = []
     current: list[str] = []
     in_braces = False
@@ -71,13 +74,13 @@ class ConversionWorker(QThread):
 
         summary_parts = []
         if successes:
-            summary_parts.append(f"✅ {len(successes)} MP3 créé(s): " + ", ".join(successes))
+            summary_parts.append(f"Success: {len(successes)} MP3 file(s) created: " + ", ".join(successes))
         if self.ignored:
-            summary_parts.append(f"ℹ️ {self.ignored} fichier(s) ignoré(s), pas des WAV.")
+            summary_parts.append(f"Note: {self.ignored} file(s) ignored because they were not WAV files.")
         if failures:
-            summary_parts.append("❌ Erreurs:\n" + "\n".join(failures))
+            summary_parts.append("Errors:\n" + "\n".join(failures))
 
-        message = "\n\n".join(summary_parts) if summary_parts else "Rien à convertir."
+        message = "\n\n".join(summary_parts) if summary_parts else "Nothing to convert."
         level = "error" if failures and not successes else "info"
         self.finished.emit(level, message)
 
@@ -94,7 +97,7 @@ class DropZone(QFrame):
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignCenter)
 
-        label = QLabel("Dépose tes WAV ici\n\nou clique sur le bouton en dessous")
+        label = QLabel("Drop your WAV files here\n\nor use the button below")
         label.setAlignment(Qt.AlignCenter)
         label.setObjectName("dropLabel")
         layout.addWidget(label)
@@ -128,7 +131,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.worker: ConversionWorker | None = None
         self.output_dir: Path | None = None
-        self.setWindowTitle("Convertisseur WAV → MP3")
+        self.setWindowTitle(APP_NAME)
         self.resize(660, 450)
         self.setMinimumSize(560, 380)
 
@@ -138,12 +141,12 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(28, 24, 28, 18)
         layout.setSpacing(14)
 
-        title = QLabel("Convertisseur WAV → MP3")
+        title = QLabel(APP_NAME)
         title.setObjectName("title")
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
 
-        subtitle = QLabel("Glisse-dépose tes fichiers .wav ici. Choisis un dossier de sortie si tu ne veux pas les MP3 à côté des WAV.")
+        subtitle = QLabel("Drag and drop .wav files here. Choose an output folder if you do not want MP3s next to the WAV files.")
         subtitle.setObjectName("subtitle")
         subtitle.setAlignment(Qt.AlignCenter)
         subtitle.setWordWrap(True)
@@ -152,12 +155,12 @@ class MainWindow(QMainWindow):
         output_row = QHBoxLayout()
         layout.addLayout(output_row)
 
-        output_button = QPushButton("Choisir dossier de sortie")
+        output_button = QPushButton("Choose output folder")
         output_button.clicked.connect(self.choose_output_dir)
         output_button.setObjectName("secondaryButton")
         output_row.addWidget(output_button)
 
-        self.output_label = QLabel("Sortie : même dossier que les WAV")
+        self.output_label = QLabel("Output: same folder as WAV files")
         self.output_label.setObjectName("outputLabel")
         self.output_label.setWordWrap(True)
         output_row.addWidget(self.output_label, stretch=1)
@@ -175,12 +178,12 @@ class MainWindow(QMainWindow):
         bottom = QHBoxLayout()
         layout.addLayout(bottom)
 
-        choose_button = QPushButton("Choisir des fichiers WAV")
+        choose_button = QPushButton("Choose WAV files")
         choose_button.clicked.connect(self.choose_files)
         choose_button.setObjectName("primaryButton")
         bottom.addWidget(choose_button)
 
-        self.status = QLabel("Prêt.")
+        self.status = QLabel("Ready.")
         self.status.setObjectName("status")
         bottom.addWidget(self.status, stretch=1)
 
@@ -206,21 +209,21 @@ class MainWindow(QMainWindow):
     def choose_output_dir(self) -> None:
         directory = QFileDialog.getExistingDirectory(
             self,
-            "Choisir le dossier de sortie MP3",
+            "Choose MP3 output folder",
             str(self.output_dir or Path.home()),
         )
         if not directory:
             return
 
         self.output_dir = Path(directory)
-        self.output_label.setText(f"Sortie : {self.output_dir}")
+        self.output_label.setText(f"Output: {self.output_dir}")
 
     def choose_files(self) -> None:
         filenames, _ = QFileDialog.getOpenFileNames(
             self,
-            "Choisir des fichiers WAV",
+            "Choose WAV files",
             str(Path.home()),
-            "Fichiers WAV (*.wav);;Tous les fichiers (*)",
+            "WAV files (*.wav);;All files (*)",
         )
         self.start_conversion([Path(name) for name in filenames])
 
@@ -229,17 +232,17 @@ class MainWindow(QMainWindow):
         ignored = len(files) - len(wav_files)
 
         if not wav_files:
-            QMessageBox.warning(self, "Aucun WAV", "Dépose au moins un fichier .wav.")
+            QMessageBox.warning(self, "No WAV files", "Drop at least one .wav file.")
             return
 
         if self.worker and self.worker.isRunning():
-            QMessageBox.information(self, "Patiente", "Une conversion est déjà en cours.")
+            QMessageBox.information(self, "Please wait", "A conversion is already running.")
             return
 
         self.progress.setRange(0, 0)
         self.progress.show()
-        output_text = f" vers {self.output_dir}" if self.output_dir else " dans le dossier des WAV"
-        self.status.setText(f"Conversion de {len(wav_files)} fichier(s){output_text}…")
+        output_text = f" to {self.output_dir}" if self.output_dir else " in the WAV files folder"
+        self.status.setText(f"Converting {len(wav_files)} file(s){output_text}...")
 
         self.worker = ConversionWorker(wav_files, ignored, self.output_dir)
         self.worker.finished.connect(self.on_conversion_finished)
@@ -249,12 +252,12 @@ class MainWindow(QMainWindow):
         self.progress.hide()
         self.progress.setRange(0, 1)
         self.progress.setValue(0)
-        self.status.setText("Terminé." if level != "error" else "Terminé avec erreurs.")
+        self.status.setText("Done." if level != "error" else "Done with errors.")
 
         if level == "error":
-            QMessageBox.critical(self, "Conversion WAV → MP3", message)
+            QMessageBox.critical(self, APP_NAME, message)
         else:
-            QMessageBox.information(self, "Conversion WAV → MP3", message)
+            QMessageBox.information(self, APP_NAME, message)
 
 
 def main() -> None:

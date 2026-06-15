@@ -41,7 +41,7 @@ def test_convert_wav_to_mp3_rejects_non_wav_file(tmp_path):
     source = tmp_path / "track.aiff"
     source.write_bytes(b"not a wav")
 
-    with pytest.raises(ConversionError, match="fichier WAV"):
+    with pytest.raises(ConversionError, match="WAV file"):
         convert_wav_to_mp3(source)
 
 

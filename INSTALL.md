@@ -1,62 +1,62 @@
 # Installation
 
-## macOS — app classique
+## macOS - desktop app
 
-Télécharge l'artefact GitHub Actions ou la release :
-
-```text
-Convertisseur-WAV-vers-MP3-macOS.zip
-```
-
-Puis :
-
-1. Dézippe le fichier.
-2. Glisse `Convertisseur WAV vers MP3.app` dans `/Applications`.
-3. Ouvre l'app.
-4. Si macOS bloque l'ouverture car l'app n'est pas signée : clic droit → **Ouvrir** → **Ouvrir**.
-
-> Note : l'app utilise `ffmpeg`. Installe-le avec `brew install ffmpeg` si nécessaire.
-
-## Windows — app classique
-
-Télécharge l'artefact GitHub Actions ou la release :
+Download the GitHub Actions artifact or release asset:
 
 ```text
-Convertisseur-WAV-vers-MP3-Windows.zip
+WAV-to-MP3-Converter-macOS.zip
 ```
 
-Puis :
+Then:
 
-1. Dézippe le fichier.
-2. Lance `Convertisseur WAV vers MP3.exe`.
-3. Si Windows SmartScreen bloque l'app car elle n'est pas signée : **Informations complémentaires** → **Exécuter quand même**.
+1. Unzip the file.
+2. Move `WAV to MP3 Converter.app` to `/Applications`.
+3. Open the app.
+4. If macOS blocks the app because it is not signed: right-click the app -> **Open** -> **Open**.
 
-> Note : installe `ffmpeg` et assure-toi qu'il est dans le PATH Windows, ou utilise Chocolatey : `choco install ffmpeg`.
+> Note: the app uses `ffmpeg`. Install it with `brew install ffmpeg` if needed.
 
-## Linux — CLI toutes distributions
+## Windows - desktop app
 
-Option recommandée avec Python :
+Download the GitHub Actions artifact or release asset:
+
+```text
+WAV-to-MP3-Converter-Windows.zip
+```
+
+Then:
+
+1. Unzip the file.
+2. Run `WAV to MP3 Converter.exe`.
+3. If Windows SmartScreen blocks the app because it is not signed: click **More info** -> **Run anyway**.
+
+> Note: install `ffmpeg` and make sure it is available in the Windows PATH, or use Chocolatey: `choco install ffmpeg`.
+
+## Linux - CLI for any distribution
+
+Recommended source install:
 
 ```bash
 python3 -m pip install .
-wav-to-mp3 ~/Musique/album --output-dir ~/Musique/mp3
+wav-to-mp3 ~/Music/album --output-dir ~/Music/mp3
 ```
 
-Ou télécharge l'artefact binaire :
+Or download the binary artifact:
 
 ```text
 wav-to-mp3-linux-x86_64.tar.gz
 ```
 
-Puis :
+Then:
 
 ```bash
 tar -xzf wav-to-mp3-linux-x86_64.tar.gz
 chmod +x wav-to-mp3
-./wav-to-mp3 ~/Musique/album --output-dir ~/Musique/mp3
+./wav-to-mp3 ~/Music/album --output-dir ~/Music/mp3
 ```
 
-Installe `ffmpeg` selon ta distribution :
+Install `ffmpeg` for your distribution:
 
 ```bash
 # Debian/Ubuntu
@@ -69,21 +69,21 @@ sudo dnf install ffmpeg
 sudo pacman -S ffmpeg
 ```
 
-## CLI — exemples
+## CLI examples
 
-Convertir deux fichiers :
+Convert two files:
 
 ```bash
 wav-to-mp3 song1.wav song2.wav
 ```
 
-Convertir tous les WAV d'un dossier vers un dossier de sortie :
+Convert all WAV files in a folder to an output folder:
 
 ```bash
 wav-to-mp3 ./wav --output-dir ./mp3
 ```
 
-Changer le bitrate :
+Change the bitrate:
 
 ```bash
 wav-to-mp3 ./wav -o ./mp3 --bitrate 192k

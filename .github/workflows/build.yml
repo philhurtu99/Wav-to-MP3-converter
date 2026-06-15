@@ -78,13 +78,13 @@ jobs:
           pyinstaller --noconfirm packaging/pyinstaller-cli.spec
           pyinstaller --noconfirm packaging/pyinstaller-gui.spec
           mkdir -p release
-          ditto -c -k --sequesterRsrc --keepParent "dist/Convertisseur WAV vers MP3.app" "release/Convertisseur-WAV-vers-MP3-macOS.zip"
+          ditto -c -k --sequesterRsrc --keepParent "dist/WAV to MP3 Converter.app" "release/WAV-to-MP3-Converter-macOS.zip"
           cp dist/wav-to-mp3 release/wav-to-mp3-macos
       - uses: actions/upload-artifact@v4
         with:
           name: wav-to-mp3-macos
           path: |
-            release/Convertisseur-WAV-vers-MP3-macOS.zip
+            release/WAV-to-MP3-Converter-macOS.zip
             release/wav-to-mp3-macos
 
   build-windows-app:
@@ -105,7 +105,7 @@ jobs:
         with:
           name: wav-to-mp3-windows
           path: |
-            release/Convertisseur-WAV-vers-MP3-Windows.zip
+            release/WAV-to-MP3-Converter-Windows.zip
             release/wav-to-mp3-windows.exe
 
   release:
