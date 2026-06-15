@@ -4,11 +4,12 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtGui import QDragEnterEvent, QDropEvent
+from PySide6.QtGui import QColor, QDragEnterEvent, QDropEvent
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
     QFrame,
+    QGraphicsDropShadowEffect,
     QHBoxLayout,
     QLabel,
     QMainWindow,
@@ -23,6 +24,116 @@ from .converter import ConversionError, convert_wav_to_mp3
 
 
 APP_NAME = "WAV to MP3 Converter"
+
+MODERN_DARK_STYLE = """
+QMainWindow {
+    background: #070b14;
+}
+QWidget#appShell {
+    background: #070b14;
+    color: #f8fafc;
+    font-family: "Inter", "SF Pro Display", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+QFrame#heroCard {
+    background: #0f172a;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 32px;
+}
+QLabel#eyebrow {
+    color: #38bdf8;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+}
+QLabel#title {
+    color: #f8fafc;
+    font-size: 34px;
+    font-weight: 850;
+    letter-spacing: -0.8px;
+}
+QLabel#subtitle {
+    color: #94a3b8;
+    font-size: 15px;
+    line-height: 1.45;
+}
+QFrame#outputCard {
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 18px;
+}
+QLabel#outputLabel {
+    color: #cbd5e1;
+    font-size: 13px;
+    font-weight: 600;
+}
+QFrame#dropCard {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #111827, stop:1 #0b1220);
+    border: 1px dashed rgba(56, 189, 248, 0.72);
+    border-radius: 28px;
+}
+QFrame#dropCard[dragging="true"] {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #082f49, stop:1 #0f172a);
+    border: 2px solid #38bdf8;
+}
+QLabel#dropIcon {
+    color: #7dd3fc;
+    font-size: 42px;
+    font-weight: 700;
+}
+QLabel#dropLabel {
+    color: #f8fafc;
+    font-size: 22px;
+    font-weight: 800;
+}
+QLabel#dropHint {
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 500;
+}
+QLabel#status {
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 600;
+    padding-left: 12px;
+}
+QPushButton {
+    border: 0;
+    border-radius: 14px;
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 800;
+}
+QPushButton#primaryButton {
+    color: #04111f;
+    background: #38bdf8;
+}
+QPushButton#primaryButton:hover {
+    background: #7dd3fc;
+}
+QPushButton#primaryButton:pressed {
+    background: #0ea5e9;
+}
+QPushButton#secondaryButton {
+    color: #e2e8f0;
+    background: rgba(30, 41, 59, 0.95);
+    border: 1px solid rgba(148, 163, 184, 0.20);
+}
+QPushButton#secondaryButton:hover {
+    background: rgba(51, 65, 85, 0.98);
+    border: 1px solid rgba(125, 211, 252, 0.42);
+}
+QProgressBar {
+    background: rgba(30, 41, 59, 0.9);
+    border: 0;
+    border-radius: 6px;
+    height: 8px;
+}
+QProgressBar::chunk {
+    background: #38bdf8;
+    border-radius: 6px;
+}
+""".strip()
 
 
 def parse_dropped_paths(raw: str) -> list[Path]:
@@ -91,16 +202,28 @@ class DropZone(QFrame):
     def __init__(self) -> None:
         super().__init__()
         self.setAcceptDrops(True)
-        self.setObjectName("dropZone")
-        self.setMinimumHeight(220)
+        self.setObjectName("dropCard")
+        self.setMinimumHeight(210)
 
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignCenter)
+        layout.setSpacing(8)
+        layout.setContentsMargins(28, 28, 28, 28)
 
-        label = QLabel("Drop your WAV files here\n\nor use the button below")
+        icon = QLabel("WAV")
+        icon.setAlignment(Qt.AlignCenter)
+        icon.setObjectName("dropIcon")
+        layout.addWidget(icon)
+
+        label = QLabel("Drop WAV files here")
         label.setAlignment(Qt.AlignCenter)
         label.setObjectName("dropLabel")
         layout.addWidget(label)
+
+        hint = QLabel("Batch convert to high-quality MP3 in seconds")
+        hint.setAlignment(Qt.AlignCenter)
+        hint.setObjectName("dropHint")
+        layout.addWidget(hint)
 
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
         if event.mimeData().hasUrls():
@@ -132,28 +255,45 @@ class MainWindow(QMainWindow):
         self.worker: ConversionWorker | None = None
         self.output_dir: Path | None = None
         self.setWindowTitle(APP_NAME)
-        self.resize(660, 450)
-        self.setMinimumSize(560, 380)
+        self.resize(760, 560)
+        self.setMinimumSize(660, 500)
 
         central = QWidget()
+        central.setObjectName("appShell")
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
-        layout.setContentsMargins(28, 24, 28, 18)
-        layout.setSpacing(14)
+        layout.setContentsMargins(28, 28, 28, 24)
+        layout.setSpacing(18)
+
+        hero = QFrame()
+        hero.setObjectName("heroCard")
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(28, 26, 28, 24)
+        hero_layout.setSpacing(10)
+        layout.addWidget(hero)
+
+        eyebrow = QLabel("AUDIO CONVERTER")
+        eyebrow.setObjectName("eyebrow")
+        eyebrow.setAlignment(Qt.AlignCenter)
+        hero_layout.addWidget(eyebrow)
 
         title = QLabel(APP_NAME)
         title.setObjectName("title")
         title.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title)
+        hero_layout.addWidget(title)
 
-        subtitle = QLabel("Drag and drop .wav files here. Choose an output folder if you do not want MP3s next to the WAV files.")
+        subtitle = QLabel("Drop WAV files, choose where the MP3s go, and convert them with a clean native desktop app.")
         subtitle.setObjectName("subtitle")
         subtitle.setAlignment(Qt.AlignCenter)
         subtitle.setWordWrap(True)
-        layout.addWidget(subtitle)
+        hero_layout.addWidget(subtitle)
 
-        output_row = QHBoxLayout()
-        layout.addLayout(output_row)
+        output_card = QFrame()
+        output_card.setObjectName("outputCard")
+        output_row = QHBoxLayout(output_card)
+        output_row.setContentsMargins(14, 12, 14, 12)
+        output_row.setSpacing(12)
+        layout.addWidget(output_card)
 
         output_button = QPushButton("Choose output folder")
         output_button.clicked.connect(self.choose_output_dir)
@@ -176,6 +316,8 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.progress)
 
         bottom = QHBoxLayout()
+        bottom.setSpacing(14)
+        bottom.setContentsMargins(0, 8, 0, 0)
         layout.addLayout(bottom)
 
         choose_button = QPushButton("Choose WAV files")
@@ -187,24 +329,17 @@ class MainWindow(QMainWindow):
         self.status.setObjectName("status")
         bottom.addWidget(self.status, stretch=1)
 
-        self.setStyleSheet(
-            """
-            QMainWindow, QWidget { background: #111827; color: #f9fafb; font-family: 'Helvetica Neue'; }
-            QLabel#title { font-size: 28px; font-weight: 700; color: #f9fafb; }
-            QLabel#subtitle { font-size: 14px; color: #d1d5db; }
-            QLabel#status { color: #9ca3af; padding-left: 12px; }
-            QLabel#outputLabel { color: #d1d5db; font-size: 13px; }
-            QFrame#dropZone { background: #1f2937; border: 2px dashed #60a5fa; border-radius: 18px; }
-            QFrame#dropZone[dragging="true"] { background: #172554; border-color: #93c5fd; }
-            QLabel#dropLabel { font-size: 22px; font-weight: 700; color: #e5e7eb; }
-            QPushButton#primaryButton { background: #2563eb; color: white; border: 0; border-radius: 10px; padding: 11px 18px; font-size: 14px; font-weight: 700; }
-            QPushButton#primaryButton:hover { background: #1d4ed8; }
-            QPushButton#secondaryButton { background: #374151; color: white; border: 1px solid #4b5563; border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 700; }
-            QPushButton#secondaryButton:hover { background: #4b5563; }
-            QProgressBar { border: 0; border-radius: 5px; background: #374151; height: 10px; }
-            QProgressBar::chunk { background: #60a5fa; border-radius: 5px; }
-            """
-        )
+        self.setStyleSheet(MODERN_DARK_STYLE)
+        self._add_shadow(hero, blur=38, offset_y=18, alpha=90)
+        self._add_shadow(self.drop_zone, blur=28, offset_y=14, alpha=64)
+
+    def _add_shadow(self, widget: QWidget, blur: int, offset_y: int, alpha: int) -> None:
+        shadow = QGraphicsDropShadowEffect(widget)
+        shadow.setBlurRadius(blur)
+        shadow.setOffset(0, offset_y)
+        shadow.setColor(QColor(0, 0, 0, alpha))
+        shadow.setEnabled(True)
+        widget.setGraphicsEffect(shadow)
 
     def choose_output_dir(self) -> None:
         directory = QFileDialog.getExistingDirectory(
