@@ -11,9 +11,14 @@ dependencies = [
     "PySide6>=6.7",
 ]
 
+[project.scripts]
+wav-to-mp3 = "wav_to_mp3.cli:main"
+wav-to-mp3-gui = "wav_to_mp3.gui:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
+    "pyinstaller>=6.0",
 ]
 
 [tool.setuptools.packages.find]
